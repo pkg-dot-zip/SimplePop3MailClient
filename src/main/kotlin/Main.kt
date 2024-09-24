@@ -2,18 +2,26 @@ package com.pkg_dot_zip
 
 import com.pkg_dot_zip.pop.Pop3Client
 import io.github.cdimascio.dotenv.Dotenv
+import io.github.oshai.kotlinlogging.KotlinLogging
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
+private val logger = KotlinLogging.logger {}
+
+const val pop3Server = "mail.privateemail.com" // Hardcoded. This is where I have my mail :D
+const val pop3Port = 995
+
 fun main() {
     val dotenv = Dotenv.load()
 
-    val pop3Server = "mail.privateemail.com" // Hardcoded. This is where I have my mail :D
-    val pop3Port = 995
-    val username = dotenv.get("MAIL_USERNAME") // I've hidden these away in a .env file, obviously.
-    val password = dotenv.get("MAIL_PASSWORD") // I've hidden these away in a .env file, obviously.
+    // I've hidden these away in a .env file, obviously. 😎
+    val username = dotenv.get("MAIL_USERNAME")
+    val password = dotenv.get("MAIL_PASSWORD")
 
     val client = Pop3Client(pop3Server, pop3Port, username, password)
     client.connect()
-    client.getMailSubjects()
+
+    val mails = client.getMails() // Runs LIST and retrieves ids and sizes.
+
+    mails.forEach { mail ->
+        logger.info { client.getHeaders(mail).subject } // Retrieves all headers and then prints out the subject.
+    }
 }
