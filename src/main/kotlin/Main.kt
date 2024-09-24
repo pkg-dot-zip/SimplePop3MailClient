@@ -2,6 +2,9 @@ package com.pkg_dot_zip
 
 import com.pkg_dot_zip.pop.Pop3Client
 import io.github.cdimascio.dotenv.Dotenv
+import io.github.oshai.kotlinlogging.KotlinLogging
+
+private val logger = KotlinLogging.logger {}
 
 fun main() {
     val dotenv = Dotenv.load()
@@ -16,5 +19,7 @@ fun main() {
 
     val mails = client.getMails()
 
-    mails.forEach(client::getSubject)
+    mails.forEach { mail ->
+        logger.info { client.getHeaders(mail).subject }
+    }
 }

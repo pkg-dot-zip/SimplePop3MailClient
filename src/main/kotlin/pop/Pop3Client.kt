@@ -83,30 +83,66 @@ class Pop3Client(
         }
     }
 
-    fun getSubject(email: MailEntry) : String? = getSubject(email.mailID)
-    private fun getSubject(emailId: Int) : String? {
+    fun getHeaders(email: MailEntry): MailHeaders = getHeaders(email.mailID)
+    private fun getHeaders(emailId: Int): MailHeaders {
+        val headers = MailHeaders()
+
         // Use TOP command to fetch the headers of the email. 0 prints all the headers! 😀
         sendCommand("TOP $emailId 0")
         logger.info { "Fetching headers for message ID: $emailId" }
 
-        var line: String
-        var subject: String? = null
         // Again, multiline responses end in dots.
+        var line: String
         while (reader.readLine().also { line = it } != null && line != ".") {
-            // Only process the lines that start with "Subject:"
-            if (line.startsWith("Subject: ")) {
-                subject = line.substring(9).trim()
-                logger.info { "Subject: $subject" }
-                break  // Stop reading once we've found the subject
+            when {
+                line.startsWith("Subject: ") -> {
+                    headers.subject = line.substring(9).trim()
+                    logger.trace { "Subject: ${headers.subject}" }
+                }
+
+                line.startsWith("From: ") -> {
+                    headers.from = line.substring(6).trim()
+                    logger.trace { "From: ${headers.from}" }
+                }
+
+                line.startsWith("To: ") -> {
+                    headers.to = line.substring(4).trim()
+                    logger.trace { "To: ${headers.to}" }
+                }
+
+                line.startsWith("Date: ") -> {
+                    headers.date = line.substring(6).trim()
+                    logger.trace { "Date: ${headers.date}" }
+                }
+
+                line.startsWith("Return-Path: ") -> {
+                    headers.returnPath = line.substring(14).trim()
+                    logger.trace { "Return-Path: ${headers.returnPath}" }
+                }
+
+                line.startsWith("Received: ") -> {
+                    headers.received = line.substring(10).trim()
+                    logger.trace { "Received: ${headers.received}" }
+                }
+
+                line.startsWith("Message-ID: ") -> {
+                    headers.messageID = line.substring(12).trim()
+                    logger.trace { "Message-ID: ${headers.messageID}" }
+                }
+
+                line.startsWith("MIME-Version: ") -> {
+                    headers.mimeVersion = line.substring(14).trim()
+                    logger.trace { "MIME-Version: ${headers.mimeVersion}" }
+                }
+
+                line.startsWith("Content-Type: ") -> {
+                    headers.contentType = line.substring(14).trim()
+                    logger.trace { "Content-Type: ${headers.contentType}" }
+                }
             }
         }
 
-        if (subject == null) {
-            logger.info { "No subject found for message ID: $emailId" }
-            return null
-        }
-
-        return subject
+        return headers
     }
 
     private fun sendCommand(command: String) {
