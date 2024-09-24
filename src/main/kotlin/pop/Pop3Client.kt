@@ -83,6 +83,32 @@ class Pop3Client(
         }
     }
 
+    fun getSubject(email: MailEntry) : String? = getSubject(email.mailID)
+    private fun getSubject(emailId: Int) : String? {
+        // Use TOP command to fetch the headers of the email. 0 prints all the headers! 😀
+        sendCommand("TOP $emailId 0")
+        logger.info { "Fetching headers for message ID: $emailId" }
+
+        var line: String
+        var subject: String? = null
+        // Again, multiline responses end in dots.
+        while (reader.readLine().also { line = it } != null && line != ".") {
+            // Only process the lines that start with "Subject:"
+            if (line.startsWith("Subject: ")) {
+                subject = line.substring(9).trim()
+                logger.info { "Subject: $subject" }
+                break  // Stop reading once we've found the subject
+            }
+        }
+
+        if (subject == null) {
+            logger.info { "No subject found for message ID: $emailId" }
+            return null
+        }
+
+        return subject
+    }
+
     private fun sendCommand(command: String) {
         logger.info { "Sending command: $command" }
 

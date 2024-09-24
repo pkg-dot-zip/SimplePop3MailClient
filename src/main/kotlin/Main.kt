@@ -15,4 +15,6 @@ fun main() {
     client.connect()
 
     val mails = client.getMails()
+
+    mails.forEach(client::getSubject)
 }
