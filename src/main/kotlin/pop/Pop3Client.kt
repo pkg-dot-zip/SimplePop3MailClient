@@ -7,6 +7,7 @@ import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
 import javax.net.ssl.SSLSocketFactory
+import kotlin.system.exitProcess
 
 // Site used to get more info about individual commands: https://kb.datamotion.com/?ht_kb=how-to-utilize-pop3-protocol-to-access-datamotion-securemail-and-direct-accounts
 
@@ -30,41 +31,42 @@ class Pop3Client(
      * Then runs [login].
      */
     fun connect() {
-        try {
-            // Create SSL socket connection.
-            val socketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
-            val socket = socketFactory.createSocket(server, port) as Socket
+        // Create SSL socket connection.
+        val socketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
+        val socket = socketFactory.createSocket(server, port) as Socket
 
-            reader = BufferedReader(InputStreamReader(socket.getInputStream()))
-            writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
+        reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+        writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
 
-            logger.info { "Connected to POP3 server" }
+        logger.info { "Connected to POP3 server" }
 
-            // Read server response.
-            logger.info { reader.readLine() }
+        // Read server response.
+        logger.info { reader.readLine() }
 
-            login()
-        } catch (e: Exception) {
-            e.printStackTrace()
+        if (!login()) {
+            logger.error { "Login failed, closing application :(" }
+            exitProcess(0)
         }
     }
 
-    // TODO: Make it return a boolean false on fail instead of throwing an exception.
     /**
      * Sends `USER` and `PASS` to the server with [username] & [password] respectively.
      *
-     * @throws Exception If login failed.
+     * @return `true` if successful, `false` if not.
      */
-    private fun login() {
+    private fun login(): Boolean {
         sendCommand("USER $username")
         logger.info { reader.readLine() }
 
         sendCommand("PASS $password")
         val loginResponse = reader.readLine()
-        logger.info { loginResponse }
 
-        if (!loginResponse.startsWith("+OK")) {
-            throw Exception("Login failed: $loginResponse")
+        if (loginResponse.startsWith("+OK")) {
+            logger.info { loginResponse }
+            return true
+        } else {
+            logger.warn { "Login failed: $loginResponse" }
+            return false
         }
     }
 
