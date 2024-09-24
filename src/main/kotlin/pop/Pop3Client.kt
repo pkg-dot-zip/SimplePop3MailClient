@@ -66,15 +66,23 @@ class Pop3Client(
                 return
             }
 
-            // Fetch individual email headers (e.g., subject).
             var line: String
-            while (reader.readLine().also { line = it } != null && line != ".") {
-                logger.info { "Mail item: $line" }
-                val emailId = line.split(" ")[0]
-
-                // Validate if emailId is a number, since it might send 'TOP +OK 0' which is obviously a mistake 😭
-                if (emailId.toIntOrNull() != null) getSubject(emailId)
+            while (reader.readLine().also { line = it } != null) {
+                logger.info { line }
             }
+
+
+
+//
+//            // Fetch individual email headers (e.g., subject).
+//            var line: String
+//            while (reader.readLine().also { line = it } != null && line != ".") {
+//                logger.info { "Mail item: $line" }
+//                val emailId = line.split(" ")[0]
+//
+//                // Validate if emailId is a number, since it might send 'TOP +OK 0' which is obviously a mistake 😭
+//                if (emailId.toIntOrNull() != null) getSubject(emailId)
+//            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -83,6 +91,8 @@ class Pop3Client(
     private fun getSubject(emailId: String) {
         // Use TOP command to fetch the headers of the email (first 0 lines of the body)
         sendCommand("TOP $emailId 0")
+        logger.info { "Fetching headers for message ID: $emailId" }
+
         var line: String
         var subject = ""
         while (reader.readLine().also { line = it } != null && line != ".") {
