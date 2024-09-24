@@ -6,20 +6,22 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 
 private val logger = KotlinLogging.logger {}
 
+const val pop3Server = "mail.privateemail.com" // Hardcoded. This is where I have my mail :D
+const val pop3Port = 995
+
 fun main() {
     val dotenv = Dotenv.load()
 
-    val pop3Server = "mail.privateemail.com" // Hardcoded. This is where I have my mail :D
-    val pop3Port = 995
-    val username = dotenv.get("MAIL_USERNAME") // I've hidden these away in a .env file, obviously.
-    val password = dotenv.get("MAIL_PASSWORD") // I've hidden these away in a .env file, obviously.
+    // I've hidden these away in a .env file, obviously. 😎
+    val username = dotenv.get("MAIL_USERNAME")
+    val password = dotenv.get("MAIL_PASSWORD")
 
     val client = Pop3Client(pop3Server, pop3Port, username, password)
     client.connect()
 
-    val mails = client.getMails()
+    val mails = client.getMails() // Runs LIST and retrieves ids and sizes.
 
     mails.forEach { mail ->
-        logger.info { client.getHeaders(mail).subject }
+        logger.info { client.getHeaders(mail).subject } // Retrieves all headers and then prints out the subject.
     }
 }

@@ -12,6 +12,9 @@ import javax.net.ssl.SSLSocketFactory
 
 private val logger = KotlinLogging.logger {}
 
+/**
+ * Very simplistic Pop3 client example made for university.
+ */
 class Pop3Client(
     private val server: String,
     private val port: Int,
@@ -22,9 +25,13 @@ class Pop3Client(
     private lateinit var reader: BufferedReader
     private lateinit var writer: BufferedWriter
 
+    /**
+     * Establishes an SSL socket connection.
+     * Then runs [login].
+     */
     fun connect() {
         try {
-            // Create SSL socket connection
+            // Create SSL socket connection.
             val socketFactory = SSLSocketFactory.getDefault() as SSLSocketFactory
             val socket = socketFactory.createSocket(server, port) as Socket
 
@@ -33,26 +40,37 @@ class Pop3Client(
 
             logger.info { "Connected to POP3 server" }
 
-            // Read server response
+            // Read server response.
             logger.info { reader.readLine() }
 
-            // Log in
-            sendCommand("USER $username")
-            logger.info { reader.readLine() }
-
-            sendCommand("PASS $password")
-            val loginResponse = reader.readLine()
-            logger.info { loginResponse }
-
-            if (!loginResponse.startsWith("+OK")) {
-                throw Exception("Login failed: $loginResponse")
-            }
-
+            login()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
+    // TODO: Make it return a boolean false on fail instead of throwing an exception.
+    /**
+     * Sends `USER` and `PASS` to the server with [username] & [password] respectively.
+     *
+     * @throws Exception If login failed.
+     */
+    private fun login() {
+        sendCommand("USER $username")
+        logger.info { reader.readLine() }
+
+        sendCommand("PASS $password")
+        val loginResponse = reader.readLine()
+        logger.info { loginResponse }
+
+        if (!loginResponse.startsWith("+OK")) {
+            throw Exception("Login failed: $loginResponse")
+        }
+    }
+
+    /**
+     * Sends `LIST` to the server, then parses all the output as [MailEntry]s.
+     */
     fun getMails(): List<MailEntry> {
         val listToReturn = mutableListOf<MailEntry>()
 
@@ -83,6 +101,11 @@ class Pop3Client(
         }
     }
 
+    /**
+     * Returns an instance of [MailHeaders] for the specified [email].
+     *
+     * @param email Email to retrieve id from.
+     */
     fun getHeaders(email: MailEntry): MailHeaders = getHeaders(email.mailID)
     private fun getHeaders(emailId: Int): MailHeaders {
         val headers = MailHeaders()
@@ -145,6 +168,11 @@ class Pop3Client(
         return headers
     }
 
+    /**
+     * Writes [command] to the [writer]. In practice this means it'll be send to the server.
+     *
+     * @param command Command to send.
+     */
     private fun sendCommand(command: String) {
         logger.info { "Sending command: $command" }
 
