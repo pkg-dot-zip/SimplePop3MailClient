@@ -13,5 +13,6 @@ fun main() {
 
     val client = Pop3Client(pop3Server, pop3Port, username, password)
     client.connect()
-    client.getMailSubjects()
+
+    val mails = client.getMails()
 }
