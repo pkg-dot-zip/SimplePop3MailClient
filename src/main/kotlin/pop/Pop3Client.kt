@@ -81,7 +81,7 @@ class Pop3Client(
             sendCommand("LIST")
 
             val listResponse = reader.readLine()
-            logger.info { "LIST RESPONSE: $listResponse" }  // Read response to LIST command so we know how many responses well get.
+            logger.info { "LIST RESPONSE: $listResponse" }  // Read response to LIST command so we know how many responses we'll get.
 
             // Return empty list of no messages were found.
             if (listResponse.startsWith("+OK 0")) {
@@ -171,7 +171,7 @@ class Pop3Client(
     }
 
     /**
-     * Writes [command] to the [writer]. In practice this means it'll be send to the server.
+     * Writes [command] to the [writer]. In practice this means it'll be sent to the server.
      *
      * @param command Command to send.
      */
