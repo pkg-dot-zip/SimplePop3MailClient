@@ -55,16 +55,25 @@ class Pop3Client(
 
     fun getMailSubjects() {
         try {
-            // Send LIST command to get the list of emails
+            // Send LIST command to get the list of emails.
             sendCommand("LIST")
-            logger.info { "LIST RESPONSE: ${reader.readLine()}" }  // Read response to LIST command
 
-            // Fetch individual email headers (e.g., subject)
+            val listResponse = reader.readLine()
+            logger.info { "LIST RESPONSE: $listResponse" }  // Read response to LIST command.
+
+            if (listResponse.startsWith("+OK 0")) {
+                logger.info { "No messages in the inbox. Returning." }
+                return
+            }
+
+            // Fetch individual email headers (e.g., subject).
             var line: String
             while (reader.readLine().also { line = it } != null && line != ".") {
-                logger.info { "Mail Item: $line" }  // Each email item
+                logger.info { "Mail item: $line" }
                 val emailId = line.split(" ")[0]
-                getSubject(emailId)
+
+                // Validate if emailId is a number, since it might send 'TOP +OK 0' which is obviously a mistake 😭
+                if (emailId.toIntOrNull() != null) getSubject(emailId)
             }
         } catch (e: Exception) {
             e.printStackTrace()
